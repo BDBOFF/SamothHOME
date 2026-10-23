@@ -40,6 +40,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         vm.refresh()
         vm.checkUpdate()
+        vm.refreshWeather()
         vm.updateSetup(HomeGuardService.isDefaultHome(this), HomeGuardService.isEnabled(this))
     }
 

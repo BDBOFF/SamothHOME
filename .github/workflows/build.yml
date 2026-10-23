@@ -32,6 +32,10 @@ jobs:
           curl -fsSL --retry 4 -o app/src/main/res/font/inter.ttf "https://github.com/google/fonts/raw/main/ofl/inter/Inter%5Bopsz,wght%5D.ttf"
           ls -la app/src/main/res/font
 
+      - name: Vérifier la météo (information)
+        continue-on-error: true
+        run: curl -fsS -m 15 "https://api.open-meteo.com/v1/forecast?latitude=43.5808&longitude=6.9561&current=temperature_2m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=Europe%2FParis"
+
       - name: Compiler l'APK
         run: |
           chmod +x gradlew

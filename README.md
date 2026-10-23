@@ -6,6 +6,7 @@
 - **Navigation** : le fond affiche le nom de l'appli sélectionnée dans sa couleur, petite signature « SAMOTH HOME » en bas à droite
 - **5 favoris** fixes, dans l'ordre choisi, en tuiles de verre avec leur vraie icône et un halo lumineux à la sélection
 - **Toutes les applis** : grille qui défile, triée par utilisation
+- **Météo du jour** (La Roquette-sur-Siagne) à côté de la date : icône, température, min/max — mise à jour toutes les 30 min
 - **Roue crantée** : accès direct aux réglages de la TV
 - **Mise à jour intégrée** : une pastille « Mise à jour disponible » apparaît à côté de la roue crantée dès qu'une nouvelle version est publiée ici
 

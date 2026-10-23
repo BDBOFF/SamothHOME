@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -150,10 +151,29 @@ fun HomeScreen(vm: HomeViewModel) {
                 fontFamily = Inter, fontWeight = FontWeight.Light,
                 fontSize = 108.sp, lineHeight = 108.sp, letterSpacing = (-0.04).em,
             )
-            Text(
-                formatDate(now),
-                color = Color(0xFFC7C7D1), fontFamily = Inter, fontWeight = FontWeight.Medium, fontSize = 22.sp,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    formatDate(now),
+                    color = Color(0xFFC7C7D1), fontFamily = Inter, fontWeight = FontWeight.Medium, fontSize = 22.sp,
+                )
+                vm.weather?.let { w ->
+                    Text(
+                        "   ·   ",
+                        color = Color(0xFF6B6B7A), fontFamily = Inter, fontWeight = FontWeight.Medium, fontSize = 22.sp,
+                    )
+                    WeatherIcon(w.sky, w.isDay, Modifier.size(26.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "${w.temp}°",
+                        color = Color.White, fontFamily = Inter, fontWeight = FontWeight.SemiBold, fontSize = 22.sp,
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        "${if (!w.isDay && w.sky == com.samoth.home.Sky.Clear) "Ciel dégagé" else w.label}  ·  ${w.min}° / ${w.max}°",
+                        color = Color(0xFFA3A3B2), fontFamily = Inter, fontWeight = FontWeight.Medium, fontSize = 18.sp,
+                    )
+                }
+            }
 
             Watermark(markText, markColor, height = 112.dp, modifier = Modifier.padding(top = 2.dp))
 

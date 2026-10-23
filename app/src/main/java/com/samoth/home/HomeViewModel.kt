@@ -44,6 +44,8 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     var focusPkg by mutableStateOf<String?>(null)
 
     var update by mutableStateOf<UpdateState>(UpdateState.None); private set
+    var weather by mutableStateOf<WeatherNow?>(null); private set
+    private var lastWeather = 0L
     var menu by mutableStateOf<TileMenu?>(null); private set
     var toast by mutableStateOf<String?>(null); private set
 
@@ -221,6 +223,29 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         toast = text
         toastJob?.cancel()
         toastJob = viewModelScope.launch { delay(2500); toast = null }
+    }
+
+    // ---- Météo ----
+
+    /** Rafraîchit la météo si elle date de plus de 20 minutes. */
+    fun refreshWeather() {
+        val now = SystemClock.elapsedRealtime()
+        if (weather != null && now - lastWeather < 20 * 60_000L) return
+        lastWeather = now
+        viewModelScope.launch {
+            Weather.fetch()?.let { weather = it } ?: run { lastWeather = 0L }
+        }
+    }
+
+    init {
+        // Tant que l'accueil reste affiché, la météo se met à jour toute seule
+        viewModelScope.launch {
+            while (true) {
+                refreshWeather()
+                delay(30 * 60_000L)
+                lastWeather = 0L
+            }
+        }
     }
 
     // ---- Mise à jour ----
