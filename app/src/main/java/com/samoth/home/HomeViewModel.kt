@@ -56,14 +56,15 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     private var toastJob: Job? = null
     private var lastCheck = 0L
 
-    /** Les 5 applis de l'accueil : les favoris choisis, complétés par les plus utilisées. */
+    /** Les applis de l'accueil, exactement dans l'ordre choisi (5 places max, jamais réordonnées). */
     val favorites: List<AppEntry>
         get() {
             val byPkg = apps.associateBy { it.pkg }
-            val chosen = pinned.mapNotNull { byPkg[it] }
-            val rest = apps.filter { it.pkg !in pinned }
-            return (chosen + rest).take(5)
+            return pinned.mapNotNull { byPkg[it] }.take(5)
         }
+
+    /** Places vides de l'accueil (tuile « + »). */
+    val freeSlots: Int get() = (5 - favorites.size).coerceAtLeast(0)
 
     fun isFavorite(app: AppEntry) = favorites.any { it.pkg == app.pkg }
 
@@ -72,6 +73,11 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
             val list = withContext(Dispatchers.Default) { repo.load() }
             apps = list
             loaded = true
+            // Premier lancement : on remplit l'accueil une fois, ensuite il ne bouge plus
+            if (!repo.isSeeded()) {
+                if (pinned.isEmpty()) save(list.take(5).map { it.pkg })
+                repo.markSeeded()
+            }
         }
     }
 
@@ -135,7 +141,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         menu = null
     }
 
-    /** Fige l'ordre actuel de l'accueil pour pouvoir le modifier. */
+    /** Ordre actuel de l'accueil (applis encore installées). */
     private fun current(): MutableList<String> = favorites.map { it.pkg }.toMutableList()
 
     private fun save(list: List<String>) {

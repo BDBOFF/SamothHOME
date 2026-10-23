@@ -4,7 +4,7 @@
 
 - **Allumage** : grande horloge, date, et « SAMOTH HOME » en fond, gras et transparent
 - **Navigation** : le fond affiche le nom de l'appli sélectionnée dans sa couleur, petite signature « SAMOTH HOME » en bas à droite
-- **5 favoris** : les applis les plus utilisées, en tuiles de verre avec leur vraie icône et un halo lumineux à la sélection
+- **5 favoris** fixes, dans l'ordre choisi, en tuiles de verre avec leur vraie icône et un halo lumineux à la sélection
 - **Toutes les applis** : grille qui défile, triée par utilisation
 - **Roue crantée** : accès direct aux réglages de la TV
 - **Mise à jour intégrée** : une pastille « Mise à jour disponible » apparaît à côté de la roue crantée dès qu'une nouvelle version est publiée ici
@@ -60,7 +60,7 @@ Ensuite, touche Home, rallumage après la veille et redémarrage ramènent toujo
 - **Toutes les applis** → placez-vous sur une appli → **maintenez OK** → *Mettre sur l'accueil*.
   Si l'accueil est plein, choisissez quelle appli remplacer.
 - Sur l'accueil, **maintenez OK** sur une tuile → *Déplacer à gauche / à droite* ou *Retirer de l'accueil*.
-- Les places libres sont complétées automatiquement par vos applis les plus utilisées.
+- L'accueil ne bouge jamais tout seul : les tuiles restent dans l'ordre que vous avez choisi. Une place libre affiche un « + » qui ouvre Toutes les applis.
 
 ## Mise à jour
 

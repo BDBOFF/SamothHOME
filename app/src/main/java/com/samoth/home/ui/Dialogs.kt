@@ -25,6 +25,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,10 +52,24 @@ import com.samoth.home.HomeViewModel
 
 private val PanelShape = RoundedCornerShape(22.dp)
 
+/**
+ * Le menu s'ouvre alors que OK est encore enfoncé (appui long) : on ignore cette touche
+ * tant qu'elle n'a pas été relâchée puis appuyée à nouveau, sinon le relâchement
+ * « cliquerait » le premier bouton du menu.
+ */
 @Composable
 private fun Panel(width: Int, content: @Composable () -> Unit) {
+    var armed by remember { mutableStateOf(false) }
     Box(
         Modifier
+            .onPreviewKeyEvent { e ->
+                val ok = e.key == Key.DirectionCenter || e.key == Key.Enter || e.key == Key.NumPadEnter
+                if (!ok || armed) return@onPreviewKeyEvent false
+                if (e.type == KeyEventType.KeyDown && e.nativeKeyEvent.repeatCount == 0) {
+                    armed = true
+                    false
+                } else true // répétitions et relâchement de l'appui long : ignorés
+            }
             .width(width.dp)
             .clip(PanelShape)
             .background(Color(0xF2141418))
@@ -134,19 +155,20 @@ fun TileMenuDialog(vm: HomeViewModel) {
                     menu.fromHome -> {
                         val pos = vm.positionOf(app)
                         val last = vm.favorites.size - 1
-                        MenuButton("Ouvrir", Modifier.focusRequester(first)) { vm.closeMenu(); vm.launch(app) }
-                        if (pos > 0) MenuButton("◀  Déplacer à gauche") { vm.move(app, -1) }
-                        if (pos in 0 until last) MenuButton("Déplacer à droite  ▶") { vm.move(app, +1) }
-                        MenuButton("Retirer de l'accueil", danger = true) { vm.removeFromHome(app) }
+                        // Le premier bouton reçoit le focus ; toujours présent
+                        if (pos > 0) MenuButton("◀  Déplacer à gauche", Modifier.focusRequester(first)) { vm.move(app, -1) }
+                        if (pos in 0 until last) MenuButton("Déplacer à droite  ▶", if (pos == 0) Modifier.focusRequester(first) else Modifier) { vm.move(app, +1) }
+                        MenuButton("Retirer de l'accueil", if (last <= 0) Modifier.focusRequester(first) else Modifier, danger = true) { vm.removeFromHome(app) }
+                        MenuButton("Ouvrir") { vm.closeMenu(); vm.launch(app) }
                         MenuButton("Fermer") { vm.closeMenu() }
                     }
                     else -> {
-                        MenuButton("Ouvrir", Modifier.focusRequester(first)) { vm.closeMenu(); vm.launch(app) }
                         if (vm.isFavorite(app)) {
-                            MenuButton("Retirer de l'accueil", danger = true) { vm.removeFromHome(app) }
+                            MenuButton("Retirer de l'accueil", Modifier.focusRequester(first), danger = true) { vm.removeFromHome(app) }
                         } else {
-                            MenuButton("Mettre sur l'accueil") { vm.addToHome(app) }
+                            MenuButton("Mettre sur l'accueil", Modifier.focusRequester(first)) { vm.addToHome(app) }
                         }
+                        MenuButton("Ouvrir") { vm.closeMenu(); vm.launch(app) }
                         MenuButton("Fermer") { vm.closeMenu() }
                     }
                 }

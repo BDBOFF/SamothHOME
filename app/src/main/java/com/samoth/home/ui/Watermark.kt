@@ -33,7 +33,7 @@ private val BaseStyle = TextStyle(fontFamily = Unbounded, letterSpacing = (-0.02
  */
 @Composable
 fun Watermark(text: String, color: Color, height: Dp, modifier: Modifier = Modifier) {
-    val tint by animateColorAsState(color.copy(alpha = 0.15f), tween(450), label = "mark")
+    val tint by animateColorAsState(color.copy(alpha = 0.34f), tween(450), label = "mark")
     BoxWithConstraints(modifier.fillMaxWidth().height(height), contentAlignment = Alignment.Center) {
         val measurer = rememberTextMeasurer()
         val density = LocalDensity.current

@@ -73,6 +73,9 @@ class AppsRepository(private val context: Context) {
     fun pinned(): List<String> =
         (usage.getString(PINNED, "") ?: "").split(',').filter { it.isNotBlank() }
 
+    fun isSeeded() = usage.getBoolean(SEEDED, false)
+    fun markSeeded() = usage.edit().putBoolean(SEEDED, true).apply()
+
     fun savePinned(list: List<String>) {
         usage.edit().putString(PINNED, list.distinct().take(5).joinToString(",")).apply()
     }
@@ -100,6 +103,7 @@ class AppsRepository(private val context: Context) {
     companion object {
         const val SAMOTH_TV = "com.nova.tv"
         private const val PINNED = "__pinned__"
+        private const val SEEDED = "__seeded__"
         val SAMOTH_RED = Color(0xFFD10A20)
         val NEUTRAL = Color(0xFFB4B4BC)
 

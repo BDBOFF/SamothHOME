@@ -261,3 +261,33 @@ fun GridGlyph(color: Color) {
         }
     }
 }
+
+/** Place libre de l'accueil : tuile verre avec un « + ». */
+@Composable
+fun AddTile(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val source = remember { MutableInteractionSource() }
+    val focused by source.collectIsFocusedAsState()
+    val scale by animateFloatAsState(if (focused) 1.1f else 1f, tween(180), label = "add")
+    Column(modifier.zIndex(if (focused) 1f else 0f), horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .graphicsLayer { scaleX = scale; scaleY = scale }
+                .clip(TileShape)
+                .background(if (focused) Color.White.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.03f))
+                .border(1.dp, Color.White.copy(alpha = if (focused) 0.6f else 0.1f), TileShape)
+                .clickable(interactionSource = source, indication = null, onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("+", color = Color.White.copy(alpha = if (focused) 0.95f else 0.35f), fontFamily = Inter, fontWeight = FontWeight.Light, fontSize = 34.sp)
+        }
+        Spacer(Modifier.height(if (focused) 12.dp else 8.dp))
+        Text(
+            "Ajouter",
+            color = if (focused) Samoth.Text else Color.Transparent,
+            fontFamily = Inter, fontWeight = FontWeight.SemiBold, fontSize = 11.sp,
+            textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}

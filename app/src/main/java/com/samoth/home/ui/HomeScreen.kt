@@ -34,6 +34,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
@@ -138,23 +139,23 @@ fun HomeScreen(vm: HomeViewModel) {
 
     Box(Modifier.fillMaxSize()) {
         Column(
-            Modifier.fillMaxSize().padding(start = 80.dp, end = 80.dp, top = 24.dp, bottom = 28.dp),
+            Modifier.fillMaxSize().padding(start = 80.dp, end = 80.dp, top = 20.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             TopActions(vm, Modifier.align(Alignment.End))
 
             Text(
                 formatTime(now),
-                color = androidx.compose.ui.graphics.Color.White,
+                color = Color.White,
                 fontFamily = Inter, fontWeight = FontWeight.Light,
-                fontSize = 80.sp, lineHeight = 80.sp, letterSpacing = (-0.04).em,
+                fontSize = 108.sp, lineHeight = 108.sp, letterSpacing = (-0.04).em,
             )
             Text(
                 formatDate(now),
-                color = Samoth.Muted, fontFamily = Inter, fontWeight = FontWeight.Medium, fontSize = 16.sp,
+                color = Color(0xFFC7C7D1), fontFamily = Inter, fontWeight = FontWeight.Medium, fontSize = 22.sp,
             )
 
-            Watermark(markText, markColor, height = 132.dp, modifier = Modifier.padding(top = 4.dp))
+            Watermark(markText, markColor, height = 112.dp, modifier = Modifier.padding(top = 2.dp))
 
             Row(
                 Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -174,8 +175,10 @@ fun HomeScreen(vm: HomeViewModel) {
                         )
                     }
                 }
-                // Garde des tuiles de même taille s'il y a moins de 5 applis
-                repeat(5 - favorites.size) { Spacer(Modifier.weight(1f)) }
+                // Places libres : tuile « + » qui ouvre Toutes les applis
+                if (vm.loaded) repeat(vm.freeSlots) {
+                    AddTile(Modifier.weight(1f)) { vm.openAllApps() }
+                }
             }
 
             Spacer(Modifier.height(18.dp))
