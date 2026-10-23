@@ -26,7 +26,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,7 +44,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -184,27 +187,60 @@ fun AppTile(
 
 /** Bouton rond en verre (roue crantée, retour). */
 @Composable
-fun GlassCircleButton(icon: ImageVector, description: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun GlassCircleButton(icon: ImageVector, description: String, modifier: Modifier = Modifier, onClick: () -> Unit) =
+    GlassCircle(description, modifier, onClick) { focused ->
+        Icon(icon, contentDescription = description, tint = if (focused) Samoth.Bg else Color(0xFFE8E8ED), modifier = Modifier.size(16.dp))
+    }
+
+/** Bouton rond en verre ; blanc lumineux quand il est sélectionné. */
+@Composable
+fun GlassCircle(
+    description: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    content: @Composable (focused: Boolean) -> Unit,
+) {
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusedAsState()
     val scale by animateFloatAsState(if (focused) 1.12f else 1f, tween(160), label = "btn")
     Box(
         modifier
-            .size(32.dp)
+            .size(34.dp)
             .graphicsLayer { scaleX = scale; scaleY = scale }
+            .drawBehind { if (focused) halo(Color.White.copy(alpha = 0.7f), 17.dp) }
             .clip(CircleShape)
-            .background(if (focused) Color.White.copy(alpha = 0.9f) else Samoth.Glass)
+            .background(if (focused) Color(0xFFF5F5F7) else Samoth.Glass)
             .border(1.dp, if (focused) Color.White else Color.White.copy(alpha = 0.14f), CircleShape)
+            .semantics { contentDescription = description }
             .clickable(interactionSource = source, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) {
-        Icon(icon, contentDescription = description, tint = if (focused) Samoth.Bg else Color(0xFFE8E8ED), modifier = Modifier.size(16.dp))
+    ) { content(focused) }
+}
+
+/** Icône réglages « curseurs » : trois réglettes, un bouton rouge Samoth. */
+@Composable
+fun SlidersGlyph(focused: Boolean, modifier: Modifier = Modifier) {
+    val line = if (focused) Samoth.Bg.copy(alpha = 0.5f) else Color(0xFFE8E8ED).copy(alpha = 0.6f)
+    val ring = if (focused) Samoth.Bg else Color(0xFFE8E8ED)
+    val knobFill = if (focused) Color(0xFFF5F5F7) else Color(0xFF232327)
+    Canvas(modifier.size(18.dp)) {
+        val u = size.width / 24f
+        val sw = 1.6f * u
+        for (y in listOf(7f, 12f, 17f)) {
+            drawLine(line, Offset(4 * u, y * u), Offset(20 * u, y * u), sw, StrokeCap.Round)
+        }
+        val r = 2.2f * u
+        for ((x, y) in listOf(15f to 7f, 13f to 17f)) {
+            drawCircle(knobFill, r, Offset(x * u, y * u))
+            drawCircle(ring, r, Offset(x * u, y * u), style = Stroke(1.5f * u))
+        }
+        drawCircle(Samoth.Red, r + 0.75f * u, Offset(8 * u, 12 * u))
     }
 }
 
 @Composable
 fun SettingsButton(modifier: Modifier = Modifier, onClick: () -> Unit) =
-    GlassCircleButton(Icons.Filled.Settings, "Réglages de la TV", modifier, onClick)
+    GlassCircle("Réglages de la TV", modifier, onClick) { focused -> SlidersGlyph(focused) }
 
 @Composable
 fun BackButton(modifier: Modifier = Modifier, onClick: () -> Unit) =
