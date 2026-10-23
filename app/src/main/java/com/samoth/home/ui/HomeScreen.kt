@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -60,7 +61,26 @@ fun HomeRoot(vm: HomeViewModel) {
             Screen.Home -> HomeScreen(vm)
             Screen.AllApps -> AllAppsScreen(vm)
         }
+        Toast(vm.toast, Modifier.align(Alignment.BottomCenter).padding(bottom = 22.dp))
+        TileMenuDialog(vm)
+        SetupDialog(vm)
     }
+}
+
+/** Une FocusRequester par appli, pour redonner le focus à la bonne tuile. */
+@Composable
+fun rememberTileFocus(vm: HomeViewModel, visible: List<String>, fallback: FocusRequester): Map<String, FocusRequester> {
+    val map = remember { mutableMapOf<String, FocusRequester>() }
+    visible.forEach { pkg -> if (pkg !in map) map[pkg] = FocusRequester() }
+    LaunchedEffect(vm.focusPkg, vm.menu) {
+        val pkg = vm.focusPkg ?: return@LaunchedEffect
+        if (vm.menu != null) return@LaunchedEffect
+        delay(80)
+        val target = if (pkg in visible) map[pkg] else fallback
+        runCatching { target?.requestFocus() }
+        vm.focusPkg = null
+    }
+    return map
 }
 
 private val NavKeys = setOf(Key.DirectionLeft, Key.DirectionRight, Key.DirectionUp, Key.DirectionDown)
@@ -106,6 +126,7 @@ fun HomeScreen(vm: HomeViewModel) {
     val now = rememberNow()
     val first = remember { FocusRequester() }
     val favorites = vm.favorites
+    val tileFocus = rememberTileFocus(vm, favorites.map { it.pkg }, first)
 
     LaunchedEffect(vm.focusReset, favorites.isNotEmpty()) {
         if (favorites.isNotEmpty()) runCatching { first.requestFocus() }
@@ -140,13 +161,18 @@ fun HomeScreen(vm: HomeViewModel) {
                 horizontalArrangement = Arrangement.spacedBy(22.dp),
             ) {
                 favorites.forEachIndexed { i, app ->
-                    AppTile(
-                        app,
-                        modifier = Modifier.weight(1f),
-                        focusModifier = if (i == 0) Modifier.focusRequester(first) else Modifier,
-                        onFocused = { vm.onFocus(app) },
-                        onClick = { vm.launch(app) },
-                    )
+                    key(app.pkg) {
+                        AppTile(
+                            app,
+                            modifier = Modifier.weight(1f),
+                            focusModifier = Modifier
+                                .then(if (i == 0) Modifier.focusRequester(first) else Modifier)
+                                .focusRequester(tileFocus.getValue(app.pkg)),
+                            onFocused = { vm.onFocus(app) },
+                            onLongClick = { vm.openMenu(app, fromHome = true) },
+                            onClick = { vm.launch(app) },
+                        )
+                    }
                 }
                 // Garde des tuiles de même taille s'il y a moins de 5 applis
                 repeat(5 - favorites.size) { Spacer(Modifier.weight(1f)) }

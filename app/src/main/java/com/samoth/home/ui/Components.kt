@@ -6,7 +6,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +31,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +47,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -70,7 +79,38 @@ private fun DrawScope.halo(color: Color, radius: Dp) {
     }
 }
 
-/** Tuile en verre transparent, avec la vraie bannière (ou icône) de l'appli et un halo au focus. */
+/**
+ * OK sur la télécommande : appui court = ouvrir, appui long (~½ s) = menu.
+ * On gère nous-mêmes la touche pour distinguer les deux de façon fiable sur TV.
+ */
+@Composable
+fun Modifier.okPress(onClick: () -> Unit, onLongClick: (() -> Unit)?): Modifier {
+    var longFired by remember { mutableStateOf(false) }
+    return this.onPreviewKeyEvent { e ->
+        val k = e.key
+        if (k != Key.DirectionCenter && k != Key.Enter && k != Key.NumPadEnter) return@onPreviewKeyEvent false
+        when (e.type) {
+            KeyEventType.KeyDown -> {
+                val repeat = e.nativeKeyEvent.repeatCount
+                if (repeat == 0) longFired = false
+                if (repeat >= 1 && !longFired && onLongClick != null) {
+                    longFired = true
+                    onLongClick()
+                }
+                true
+            }
+            KeyEventType.KeyUp -> {
+                if (!longFired) onClick()
+                longFired = false
+                true
+            }
+            else -> false
+        }
+    }
+}
+
+/** Tuile en verre : la vraie vignette de l'appli remplit la tuile ; halo à sa couleur au focus. */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AppTile(
     app: AppEntry,
@@ -78,6 +118,7 @@ fun AppTile(
     alwaysShowLabel: Boolean = false,
     focusModifier: Modifier = Modifier,
     onFocused: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
     val source = remember { MutableInteractionSource() }
@@ -100,15 +141,20 @@ fun AppTile(
                 )
                 .then(focusModifier)
                 .onFocusChanged { if (it.isFocused) onFocused() }
-                .clickable(interactionSource = source, indication = null, onClick = onClick),
+                .okPress(onClick, onLongClick)
+                .combinedClickable(
+                    interactionSource = source, indication = null,
+                    onLongClick = onLongClick, onClick = onClick,
+                ),
             contentAlignment = Alignment.Center,
         ) {
-            val a = if (focused) 1f else 0.85f
+            val a = if (focused) 1f else 0.82f
             when {
+                // Vignette d'origine en plein cadre, avec les coins arrondis de la tuile
                 app.banner != null -> Image(
                     app.banner, contentDescription = app.label,
-                    modifier = Modifier.fillMaxSize().padding(8.dp).clip(RoundedCornerShape(8.dp)).alpha(a),
-                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize().alpha(a),
+                    contentScale = ContentScale.Crop,
                 )
                 app.icon != null -> Image(
                     app.icon, contentDescription = app.label,

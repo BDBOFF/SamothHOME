@@ -27,10 +27,15 @@ Alternative : copiez `SamothHome.apk` sur une clé USB et ouvrez-le avec un gest
 
 ## En faire l'écran d'accueil (une seule fois)
 
-**Méthode simple** — appuyez sur la touche Home de la télécommande. Si la TV demande quelle appli utiliser, choisissez **Samoth Home → Toujours**.
-Ou bien : Paramètres → Applications → (Applis par défaut) → **Appli d'accueil** → Samoth Home.
+**Méthode recommandée (sans ordinateur)** — au premier lancement, Samoth Home affiche un message
+« Faire de Samoth Home votre accueil ». Choisissez **Ouvrir l'accessibilité**, puis
+**Samoth Home – touche Home → Activer**.
+Ce service ne lit rien à l'écran : il détecte seulement l'ouverture de l'accueil Sony et ramène aussitôt sur Samoth Home
+(touche Home, rallumage, retour d'une appli). Pour revenir à l'accueil Sony, désactivez-le au même endroit.
 
-**Si la TV ne propose pas ce choix** — passez par ADB depuis votre téléphone :
+Chemin manuel sur Sony : Paramètres → Préférences de l'appareil → Accessibilité → Samoth Home – touche Home.
+
+**Méthode ADB (optionnelle, sans le bref passage par l'accueil Sony)** — depuis votre téléphone :
 
 1. TV : Paramètres → Préférences de l'appareil → À propos → appuyez 7 fois sur **Version** (active les options pour les développeurs).
 2. TV : Paramètres → Préférences de l'appareil → Options pour les développeurs → activez **Débogage USB / réseau**. Notez l'adresse IP de la TV (Paramètres → Réseau).
@@ -49,6 +54,13 @@ pm enable com.google.android.tvlauncher
 ```
 
 Ensuite, touche Home, rallumage après la veille et redémarrage ramènent toujours sur Samoth Home.
+
+## Choisir les applis de l'accueil
+
+- **Toutes les applis** → placez-vous sur une appli → **maintenez OK** → *Mettre sur l'accueil*.
+  Si l'accueil est plein, choisissez quelle appli remplacer.
+- Sur l'accueil, **maintenez OK** sur une tuile → *Déplacer à gauche / à droite* ou *Retirer de l'accueil*.
+- Les places libres sont complétées automatiquement par vos applis les plus utilisées.
 
 ## Mise à jour
 

@@ -22,6 +22,9 @@ sealed interface UpdateState {
     data class Message(val text: String, val info: UpdateInfo?) : UpdateState
 }
 
+/** Menu ouvert par un appui long sur OK. */
+data class TileMenu(val app: AppEntry, val fromHome: Boolean, val choosingSlot: Boolean = false)
+
 class HomeViewModel(app: Application) : AndroidViewModel(app) {
 
     private val repo = AppsRepository(app)
@@ -29,6 +32,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     var apps by mutableStateOf<List<AppEntry>>(emptyList()); private set
     var loaded by mutableStateOf(false); private set
     var screen by mutableStateOf(Screen.Home); private set
+    private var pinned by mutableStateOf(repo.pinned())
 
     /** false à l'allumage (grand « SAMOTH HOME »), true dès qu'on navigue. */
     var navigating by mutableStateOf(false); private set
@@ -36,14 +40,32 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     var markApp by mutableStateOf<AppEntry?>(null); private set
     /** Demande de remettre le focus sur la première tuile (allumage, touche Home). */
     var focusReset by mutableStateOf(0); private set
+    /** Demande de remettre le focus sur une tuile précise de l'accueil après une modification. */
+    var focusPkg by mutableStateOf<String?>(null)
 
     var update by mutableStateOf<UpdateState>(UpdateState.None); private set
+    var menu by mutableStateOf<TileMenu?>(null); private set
+    var toast by mutableStateOf<String?>(null); private set
+
+    /** Configuration de la touche Home à proposer (service d'accessibilité pas encore activé). */
+    var setupNeeded by mutableStateOf(false); private set
+    private var setupDismissed = false
 
     private var focused: AppEntry? = null
     private var markJob: Job? = null
+    private var toastJob: Job? = null
     private var lastCheck = 0L
 
-    val favorites: List<AppEntry> get() = apps.take(5)
+    /** Les 5 applis de l'accueil : les favoris choisis, complétés par les plus utilisées. */
+    val favorites: List<AppEntry>
+        get() {
+            val byPkg = apps.associateBy { it.pkg }
+            val chosen = pinned.mapNotNull { byPkg[it] }
+            val rest = apps.filter { it.pkg !in pinned }
+            return (chosen + rest).take(5)
+        }
+
+    fun isFavorite(app: AppEntry) = favorites.any { it.pkg == app.pkg }
 
     fun refresh() {
         viewModelScope.launch {
@@ -51,6 +73,15 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
             apps = list
             loaded = true
         }
+    }
+
+    fun updateSetup(defaultHome: Boolean, guardOn: Boolean) {
+        setupNeeded = !defaultHome && !guardOn && !setupDismissed
+    }
+
+    fun dismissSetup() {
+        setupDismissed = true
+        setupNeeded = false
     }
 
     fun onFocus(app: AppEntry) {
@@ -72,23 +103,96 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
 
     fun launch(app: AppEntry) {
         repo.launch(app)
-        // Le tri par utilisation est appliqué au retour sur l'accueil (onResume → refresh)
     }
 
     fun openAllApps() { screen = Screen.AllApps }
 
-    /** Bouton Retour : revient à l'accueil ; sur l'accueil, ne fait rien (on reste sur le lanceur). */
+    /** Bouton Retour : ferme le menu, ou revient à l'accueil ; sur l'accueil, on reste. */
     fun back() {
-        if (screen != Screen.Home) screen = Screen.Home
+        when {
+            menu != null -> endMenu()
+            screen != Screen.Home -> screen = Screen.Home
+        }
     }
 
     /** Touche Home ou rallumage de la TV : retour à l'écran d'allumage. */
     fun resetToStart() {
+        menu = null
         screen = Screen.Home
         navigating = false
         markApp = null
         focusReset++
     }
+
+    // ---- Favoris (appui long) ----
+
+    fun openMenu(app: AppEntry, fromHome: Boolean) { menu = TileMenu(app, fromHome) }
+    fun closeMenu() = endMenu()
+
+    /** Ferme le menu et redonne le focus à la tuile concernée. */
+    private fun endMenu() {
+        focusPkg = menu?.app?.pkg
+        menu = null
+    }
+
+    /** Fige l'ordre actuel de l'accueil pour pouvoir le modifier. */
+    private fun current(): MutableList<String> = favorites.map { it.pkg }.toMutableList()
+
+    private fun save(list: List<String>) {
+        pinned = list.distinct().take(5)
+        repo.savePinned(pinned)
+    }
+
+    fun addToHome(app: AppEntry) {
+        val list = current()
+        if (app.pkg in list) { endMenu(); return }
+        if (list.size < 5) {
+            list.add(app.pkg); save(list); endMenu()
+            showToast("${app.label} ajoutée à l'accueil")
+        } else {
+            menu = TileMenu(app, fromHome = false, choosingSlot = true)
+        }
+    }
+
+    fun replaceSlot(index: Int, app: AppEntry) {
+        val list = current()
+        if (index !in list.indices) return
+        val old = apps.firstOrNull { it.pkg == list[index] }?.label
+        list[index] = app.pkg
+        save(list)
+        endMenu()
+        showToast(if (old != null) "${app.label} remplace $old" else "${app.label} ajoutée à l'accueil")
+    }
+
+    fun removeFromHome(app: AppEntry) {
+        val list = current()
+        list.remove(app.pkg)
+        save(list)
+        endMenu()
+        showToast("${app.label} retirée de l'accueil")
+    }
+
+    fun move(app: AppEntry, delta: Int) {
+        val list = current()
+        val i = list.indexOf(app.pkg)
+        val j = i + delta
+        if (i < 0 || j !in list.indices) return
+        list.removeAt(i); list.add(j, app.pkg)
+        save(list)
+        focusPkg = app.pkg
+        // Le menu reste ouvert pour enchaîner les déplacements
+        menu = TileMenu(app, fromHome = true)
+    }
+
+    fun positionOf(app: AppEntry) = favorites.indexOfFirst { it.pkg == app.pkg }
+
+    private fun showToast(text: String) {
+        toast = text
+        toastJob?.cancel()
+        toastJob = viewModelScope.launch { delay(2500); toast = null }
+    }
+
+    // ---- Mise à jour ----
 
     fun checkUpdate(force: Boolean = false) {
         val now = SystemClock.elapsedRealtime()

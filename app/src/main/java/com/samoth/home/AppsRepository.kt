@@ -69,6 +69,14 @@ class AppsRepository(private val context: Context) {
 
     fun launches(pkg: String) = usage.getInt(pkg, 0)
 
+    /** Favoris choisis par l'utilisateur, dans l'ordre (max 5). */
+    fun pinned(): List<String> =
+        (usage.getString(PINNED, "") ?: "").split(',').filter { it.isNotBlank() }
+
+    fun savePinned(list: List<String>) {
+        usage.edit().putString(PINNED, list.distinct().take(5).joinToString(",")).apply()
+    }
+
     private fun visualFor(pkg: String, ri: ResolveInfo): Visual {
         val stamp = runCatching { pm.getPackageInfo(pkg, 0).lastUpdateTime }.getOrDefault(0L)
         cache[pkg]?.let { if (it.stamp == stamp) return it }
@@ -91,6 +99,7 @@ class AppsRepository(private val context: Context) {
 
     companion object {
         const val SAMOTH_TV = "com.nova.tv"
+        private const val PINNED = "__pinned__"
         val SAMOTH_RED = Color(0xFFD10A20)
         val NEUTRAL = Color(0xFFB4B4BC)
 

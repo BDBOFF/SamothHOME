@@ -40,6 +40,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         vm.refresh()
         vm.checkUpdate()
+        vm.updateSetup(HomeGuardService.isDefaultHome(this), HomeGuardService.isEnabled(this))
     }
 
     // Appui sur la touche Home alors que le lanceur est déjà ouvert

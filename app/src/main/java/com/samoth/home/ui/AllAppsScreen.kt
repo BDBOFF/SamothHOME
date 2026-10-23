@@ -34,6 +34,7 @@ fun AllAppsScreen(vm: HomeViewModel) {
     val first = remember { FocusRequester() }
     val grid = rememberLazyGridState()
     val apps = vm.apps
+    val tileFocus = rememberTileFocus(vm, apps.map { it.pkg }, first)
 
     LaunchedEffect(apps.isNotEmpty()) {
         if (apps.isNotEmpty()) runCatching { first.requestFocus() }
@@ -70,8 +71,11 @@ fun AllAppsScreen(vm: HomeViewModel) {
                 AppTile(
                     app,
                     alwaysShowLabel = true,
-                    focusModifier = if (i == 0) Modifier.focusRequester(first) else Modifier,
+                    focusModifier = Modifier
+                        .then(if (i == 0) Modifier.focusRequester(first) else Modifier)
+                        .focusRequester(tileFocus.getValue(app.pkg)),
                     onFocused = { vm.onFocus(app) },
+                    onLongClick = { vm.openMenu(app, fromHome = false) },
                     onClick = { vm.launch(app) },
                 )
             }

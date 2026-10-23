@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Samoth Home</string>
+    <string name="guard_name">Samoth Home – touche Home</string>
+    <string name="guard_description">Ramène sur Samoth Home quand vous appuyez sur la touche Home ou rallumez la TV. Ne lit aucun contenu de l\'écran.</string>
 </resources>
