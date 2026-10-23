@@ -50,6 +50,8 @@ fun AllAppsScreen(vm: HomeViewModel) {
                 fontSize = 26.sp, letterSpacing = (-0.02).em,
             )
             Spacer(Modifier.weight(1f))
+            GlassPill("Tout fermer") { vm.closeAll() }
+            Spacer(Modifier.width(18.dp))
             Text(
                 formatTime(now),
                 color = Samoth.Text, fontFamily = Inter, fontWeight = FontWeight.Medium, fontSize = 15.sp,

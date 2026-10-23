@@ -190,6 +190,31 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         menu = TileMenu(app, fromHome = true)
     }
 
+    // ---- Gestion des applis ----
+
+    fun uninstall(app: AppEntry) {
+        endMenu()
+        if (!repo.uninstall(app)) showToast("Impossible de désinstaller ${app.label}")
+        // La liste se met à jour au retour (onResume)
+    }
+
+    fun openDetails(app: AppEntry) {
+        endMenu()
+        if (!repo.openDetails(app)) showToast("Réglages de l'appli indisponibles")
+    }
+
+    fun forceStop(app: AppEntry) {
+        endMenu()
+        viewModelScope.launch(Dispatchers.Default) { repo.kill(app.pkg) }
+        showToast("${app.label} fermée : elle repartira à neuf")
+    }
+
+    fun closeAll() {
+        val pkgs = apps.map { it.pkg }
+        viewModelScope.launch(Dispatchers.Default) { pkgs.forEach { repo.kill(it) } }
+        showToast("Toutes les applis ont été fermées")
+    }
+
     fun positionOf(app: AppEntry) = favorites.indexOfFirst { it.pkg == app.pkg }
 
     private fun showToast(text: String) {

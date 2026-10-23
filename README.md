@@ -62,6 +62,16 @@ Ensuite, touche Home, rallumage après la veille et redémarrage ramènent toujo
 - Sur l'accueil, **maintenez OK** sur une tuile → *Déplacer à gauche / à droite* ou *Retirer de l'accueil*.
 - L'accueil ne bouge jamais tout seul : les tuiles restent dans l'ordre que vous avez choisi. Une place libre affiche un « + » qui ouvre Toutes les applis.
 
+## Gérer les applis
+
+Maintenez OK sur n'importe quelle tuile :
+- **Forcer l'arrêt** : ferme l'appli pour qu'elle reparte à neuf au prochain lancement (utile si elle rame ou bloque après la veille).
+- **Désinstaller** : pour les applis que vous avez installées (confirmation d'Android).
+- **Désactiver** : pour les applis intégrées par Sony/Google, ouvre leur fiche où se trouve le bouton *Désactiver*.
+- **Infos de l'appli** : fiche complète (Forcer l'arrêt, Vider le cache, Stockage…).
+
+Dans **Toutes les applis**, le bouton **Tout fermer** ferme d'un coup toutes les applis restées en mémoire.
+
 ## Mise à jour
 
 Quand une nouvelle version est publiée, la pastille rouge **Mise à jour disponible** apparaît en haut à droite.

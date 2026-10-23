@@ -1,12 +1,16 @@
 package com.samoth.home
 
+import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.graphics.Bitmap
 import android.graphics.Color as AColor
 import android.graphics.drawable.Drawable
+import android.net.Uri
+import android.provider.Settings
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -20,6 +24,10 @@ data class AppEntry(
     val icon: ImageBitmap?,
     val color: Color,
     val launches: Int,
+    /** Appli intégrée à la TV (Sony, Google) : ne se désinstalle pas, mais se désactive. */
+    val isSystem: Boolean,
+    /** Appli intégrée mise à jour : on peut retirer ses mises à jour. */
+    val isUpdatedSystem: Boolean,
 )
 
 /** Liste les applis installées, retient leur utilisation et les lance. */
@@ -43,7 +51,12 @@ class AppsRepository(private val context: Context) {
         }
         val apps = found.map { (pkg, ri) ->
             val v = visualFor(pkg, ri)
-            AppEntry(pkg, v.label, v.banner, v.icon, v.color, usage.getInt(pkg, 0))
+            val flags = ri.activityInfo?.applicationInfo?.flags ?: 0
+            AppEntry(
+                pkg, v.label, v.banner, v.icon, v.color, usage.getInt(pkg, 0),
+                isSystem = flags and ApplicationInfo.FLAG_SYSTEM != 0,
+                isUpdatedSystem = flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP != 0,
+            )
         }
         cache.keys.retainAll(found.keys)
         return sort(apps)
@@ -68,6 +81,29 @@ class AppsRepository(private val context: Context) {
     }
 
     fun launches(pkg: String) = usage.getInt(pkg, 0)
+
+    /** Ouvre la fenêtre de désinstallation d'Android (confirmation demandée). */
+    fun uninstall(app: AppEntry): Boolean = runCatching {
+        context.startActivity(
+            Intent(Intent.ACTION_DELETE, Uri.parse("package:${app.pkg}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+        true
+    }.getOrDefault(false)
+
+    /** Ouvre la fiche de l'appli dans les réglages (Désactiver, Forcer l'arrêt, Vider le cache…). */
+    fun openDetails(app: AppEntry): Boolean = runCatching {
+        context.startActivity(
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${app.pkg}"))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+        true
+    }.getOrDefault(false)
+
+    /** Ferme les processus d'une appli qui n'est plus à l'écran : elle repartira à neuf. */
+    fun kill(pkg: String) {
+        val am = context.getSystemService(ActivityManager::class.java) ?: return
+        runCatching { am.killBackgroundProcesses(pkg) }
+    }
 
     /** Favoris choisis par l'utilisateur, dans l'ordre (max 5). */
     fun pinned(): List<String> =

@@ -93,7 +93,7 @@ fun MenuButton(
     Row(
         modifier
             .fillMaxWidth()
-            .height(40.dp)
+            .height(36.dp)
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(RoundedCornerShape(12.dp))
             .background(if (focused) Color.White.copy(alpha = 0.92f) else Color.White.copy(alpha = 0.06f))
@@ -133,7 +133,7 @@ fun TileMenuDialog(vm: HomeViewModel) {
     val first = remember(menu) { FocusRequester() }
     Dialog(onDismissRequest = { vm.closeMenu() }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Panel(width = 340) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     AppThumb(app)
                     Spacer(Modifier.width(10.dp))
@@ -160,7 +160,8 @@ fun TileMenuDialog(vm: HomeViewModel) {
                         if (pos in 0 until last) MenuButton("Déplacer à droite  ▶", if (pos == 0) Modifier.focusRequester(first) else Modifier) { vm.move(app, +1) }
                         MenuButton("Retirer de l'accueil", if (last <= 0) Modifier.focusRequester(first) else Modifier, danger = true) { vm.removeFromHome(app) }
                         MenuButton("Ouvrir") { vm.closeMenu(); vm.launch(app) }
-                        MenuButton("Fermer") { vm.closeMenu() }
+                        ManageButtons(vm, app)
+                        MenuButton("Annuler") { vm.closeMenu() }
                     }
                     else -> {
                         if (vm.isFavorite(app)) {
@@ -169,13 +170,26 @@ fun TileMenuDialog(vm: HomeViewModel) {
                             MenuButton("Mettre sur l'accueil", Modifier.focusRequester(first)) { vm.addToHome(app) }
                         }
                         MenuButton("Ouvrir") { vm.closeMenu(); vm.launch(app) }
-                        MenuButton("Fermer") { vm.closeMenu() }
+                        ManageButtons(vm, app)
+                        MenuButton("Annuler") { vm.closeMenu() }
                     }
                 }
             }
             LaunchedEffect(menu) { kotlinx.coroutines.delay(60); runCatching { first.requestFocus() } }
         }
     }
+}
+
+/** Forcer l'arrêt, désinstaller ou désactiver. */
+@Composable
+private fun ManageButtons(vm: HomeViewModel, app: AppEntry) {
+    MenuButton("Forcer l'arrêt") { vm.forceStop(app) }
+    when {
+        !app.isSystem -> MenuButton("Désinstaller", danger = true) { vm.uninstall(app) }
+        app.isUpdatedSystem -> MenuButton("Désinstaller les mises à jour / Désactiver", danger = true) { vm.openDetails(app) }
+        else -> MenuButton("Désactiver (appli Sony)", danger = true) { vm.openDetails(app) }
+    }
+    MenuButton("Infos de l'appli") { vm.openDetails(app) }
 }
 
 /** Premier lancement : rendre la touche Home fidèle à Samoth Home. */
