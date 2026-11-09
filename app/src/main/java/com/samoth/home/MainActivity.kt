@@ -38,6 +38,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        // L'écran de veille a renvoyé sur l'accueil : on rouvre l'appli qui était en cours
+        if (ResumeAfterDream.restoreIfNeeded(this)) return
         vm.refresh()
         vm.checkUpdate()
         vm.refreshWeather()
@@ -47,7 +49,7 @@ class MainActivity : ComponentActivity() {
     // Appui sur la touche Home alors que le lanceur est déjà ouvert
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (intent.hasCategory(Intent.CATEGORY_HOME)) vm.resetToStart()
+        if (intent.hasCategory(Intent.CATEGORY_HOME) && !ResumeAfterDream.dreaming) vm.resetToStart()
     }
 
     override fun onDestroy() {
