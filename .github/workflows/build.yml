@@ -3,6 +3,9 @@ name: Compiler Samoth Home
 on:
   push:
     branches: [main]
+    # Les changements de documentation seule (CLAUDE.md, README…) ne refont pas d'APK
+    paths-ignore:
+      - '**.md'
   workflow_dispatch:
 
 permissions:
