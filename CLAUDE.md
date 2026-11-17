@@ -9,6 +9,7 @@ Ce fichier sert à reprendre le projet sans rien perdre. Lis-le en entier avant 
 2. **Surveiller la fabrication sur GitHub Actions jusqu'au bout** (`gh run watch <id> -R BDBOFF/SamothHOME --exit-status`)
    et vérifier qu'une nouvelle Release `build-N` contenant `SamothHome.apk` est bien publiée.
    Si la compilation échoue : lire le journal, corriger, repousser, jusqu'au vert.
+   (Un commit qui ne touche **que** des fichiers `.md` ne lance pas de compilation : rien à surveiller dans ce cas.)
 3. **Mettre à jour ce CLAUDE.md** (historique des versions, bugs corrigés, reste à faire), puis commit + push.
 
 ## Préférences du propriétaire
@@ -75,7 +76,8 @@ Paquet / applicationId : `com.samoth.home`.
 
 ## Fabrication et publication de l'APK
 
-- **Tout se fait sur GitHub Actions** (`.github/workflows/build.yml`) à chaque push sur `main` :
+- **Tout se fait sur GitHub Actions** (`.github/workflows/build.yml`) à chaque push sur `main`
+  (sauf si le push ne modifie que des fichiers `.md`) :
   téléchargement des polices → `./gradlew assembleRelease -PBUILD_NUMBER=<numéro du run>` → Release `build-N`
   avec `SamothHome.apk` (marquée *latest*).
 - **versionCode = numéro du run GitHub.** C'est ce qui permet à la mise à jour intégrée de comparer les versions.
@@ -149,6 +151,8 @@ Paquet / applicationId : `com.samoth.home`.
 | build-5 | Météo du jour à côté de la date |
 | build-6 | Icône réglages « curseurs » |
 | build-7 | Retour à l'appli en cours après l'écran de veille |
+| build-8 | Aucun changement d'appli (ajout de CLAUDE.md / AGENTS.md) |
+| build-9 | Aucun changement d'appli : la fabrication ignore désormais les commits qui ne modifient que des `.md` |
 
 ## Reste à faire / idées
 
