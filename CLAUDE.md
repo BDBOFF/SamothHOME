@@ -164,3 +164,16 @@ Paquet / applicationId : `com.samoth.home`.
 ## Sécurité
 
 Le dépôt est **public** : ne jamais écrire de mot de passe, jeton ou clé dans ce fichier, le README ou les messages de commit.
+
+
+## Graphify : explorer le code sans gaspiller de tokens
+Avant grep, glob ou la lecture de fichiers entiers, utilise les outils Graphify :
+- où est défini un symbole -> graphify_find, puis graphify_node
+- comment marche une fonctionnalité -> query_graph
+- qui appelle X -> graphify_callers
+- impact d'une modification -> graphify_impact (include_risk=true)
+- tests liés -> graphify_tests_for
+- dépendances d'un fichier -> graphify_file_neighbors
+Compare le commitSha renvoyé avec `git rev-parse HEAD` : identique = fais confiance au résultat, sinon relis seulement les fichiers modifiés.
+Garde grep pour du texte précis, la config et les fichiers non indexés.
+Ne lis que les lignes utiles d'un fichier, jamais un gros fichier en entier.
