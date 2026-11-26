@@ -11,6 +11,8 @@ Ce fichier sert à reprendre le projet sans rien perdre. Lis-le en entier avant 
    Si la compilation échoue : lire le journal, corriger, repousser, jusqu'au vert.
    (Un commit qui ne touche **que** des fichiers `.md`, le dossier `.claude/` ou `.mcp.json` ne lance pas de compilation.)
 3. **Mettre à jour ce CLAUDE.md** (historique des versions, bugs corrigés, reste à faire), puis commit + push.
+4. **À la fin de chaque session où du code a changé, proposer les mises à jour de ce fichier** : une courte liste,
+   en français simple, de ce qu'il faudrait ajouter, corriger ou retirer ici, pour que le propriétaire valide.
 
 Tout ce circuit est décrit pas à pas dans la skill **`/publier-home`** : l'utiliser à la fin de chaque modification.
 
@@ -79,7 +81,7 @@ Paquet / applicationId : `com.samoth.home`.
 ## Fabrication et publication de l'APK
 
 - **Tout se fait sur GitHub Actions** (`.github/workflows/build.yml`) à chaque push sur `main`
-  (sauf si le push ne modifie que des fichiers `.md`) :
+  (sauf si le push ne modifie que des `.md`, `.claude/` ou `.mcp.json`) :
   téléchargement des polices → `./gradlew assembleRelease -PBUILD_NUMBER=<numéro du run>` → Release `build-N`
   avec `SamothHome.apk` (marquée *latest*).
 - **versionCode = numéro du run GitHub.** C'est ce qui permet à la mise à jour intégrée de comparer les versions.
