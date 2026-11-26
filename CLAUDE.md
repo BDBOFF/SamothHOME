@@ -9,8 +9,10 @@ Ce fichier sert à reprendre le projet sans rien perdre. Lis-le en entier avant 
 2. **Surveiller la fabrication sur GitHub Actions jusqu'au bout** (`gh run watch <id> -R BDBOFF/SamothHOME --exit-status`)
    et vérifier qu'une nouvelle Release `build-N` contenant `SamothHome.apk` est bien publiée.
    Si la compilation échoue : lire le journal, corriger, repousser, jusqu'au vert.
-   (Un commit qui ne touche **que** des fichiers `.md` ne lance pas de compilation : rien à surveiller dans ce cas.)
+   (Un commit qui ne touche **que** des fichiers `.md`, le dossier `.claude/` ou `.mcp.json` ne lance pas de compilation.)
 3. **Mettre à jour ce CLAUDE.md** (historique des versions, bugs corrigés, reste à faire), puis commit + push.
+
+Tout ce circuit est décrit pas à pas dans la skill **`/publier-home`** : l'utiliser à la fin de chaque modification.
 
 ## Préférences du propriétaire
 
@@ -94,6 +96,27 @@ Paquet / applicationId : `com.samoth.home`.
   `gh release download` ne marche pas ; passer par `gh api -H "Accept: application/octet-stream" repos/.../releases/assets/<id>`.
 - Le dépôt a été renommé en `SamothHOME` (casse) : remote `https://github.com/BDBOFF/SamothHOME`.
 
+## Automatisations Claude Code (dossier `.claude/`)
+
+Mises en place le 26/11/2026, actives à chaque session sur ce dépôt :
+
+- **Hook `guard_secrets.py`** (avant chaque écriture, commit ou push) : bloque jetons, clés privées, clés API,
+  adresse e-mail personnelle (reconnue par empreinte SHA-256, jamais en clair), et **toute modification ou
+  suppression de `app/samoth-home.jks`**. Ne regarde que les lignes ajoutées (la config de signature déjà
+  présente dans `app/build.gradle.kts` est une décision assumée). Ne jamais le contourner.
+- **Hook `check_kotlin.py`** (après chaque modification d'un `.kt`) : imports `getValue`/`setValue` manquants,
+  API Android > 26 sans test de version, `Context.RECEIVER_*` au lieu de `ContextCompat`, et `AppTile` sans
+  `.okPress(...)`. `// check-ok` en fin de ligne pour un faux positif.
+- **Subagent `relecteur-home`** : joue le compilateur avant chaque push et protège les comportements validés
+  (touche Home, appui long, favoris fixes, signature).
+- **Skill `/publier-home`** : relecture → commit → push → surveillance → correction si échec → release →
+  CLAUDE.md → message au propriétaire.
+- **Skill `regles-lanceur`** (automatique) : conventions d'interface (focus, `okPress`, `Panel`, couleurs `Samoth.*`,
+  tailles TV, maquettes avant un gros changement visuel).
+- **MCP `context7`** (`.mcp.json`) : documentation à jour de Jetpack Compose / Android.
+- Noms distincts de ceux de Samoth TV (`publier`, `relecteur`, `regles-tv`) pour ne pas mélanger les deux dépôts.
+- Commits : auteur `BDBOFF` avec l'adresse `BDBOFF@users.noreply.github.com` (ne plus utiliser l'adresse perso).
+
 ## Installation sur la TV (rappel)
 
 1. APK via l'appli **Downloader** (lien fixe ci-dessus) ou clé USB.
@@ -153,6 +176,7 @@ Paquet / applicationId : `com.samoth.home`.
 | build-7 | Retour à l'appli en cours après l'écran de veille |
 | build-8 | Aucun changement d'appli (ajout de CLAUDE.md / AGENTS.md) |
 | build-9 | Aucun changement d'appli : la fabrication ignore désormais les commits qui ne modifient que des `.md` |
+| build-10 | Aucun changement d'appli : la fabrication ignore aussi `.claude/` et `.mcp.json` (ajout des automatisations) |
 
 ## Reste à faire / idées
 

@@ -3,9 +3,11 @@ name: Compiler Samoth Home
 on:
   push:
     branches: [main]
-    # Les changements de documentation seule (CLAUDE.md, README…) ne refont pas d'APK
+    # Documentation seule ou réglages de l'assistant : pas de nouvel APK
     paths-ignore:
       - '**.md'
+      - '.claude/**'
+      - '.mcp.json'
   workflow_dispatch:
 
 permissions:
