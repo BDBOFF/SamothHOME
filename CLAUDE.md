@@ -176,30 +176,30 @@ Mises en place le 26/11/2026, actives à chaque session sur ce dépôt :
 | build-5 | Météo du jour à côté de la date |
 | build-6 | Icône réglages « curseurs » |
 | build-7 | Retour à l'appli en cours après l'écran de veille |
-| build-8 | Aucun changement d'appli (ajout de CLAUDE.md / AGENTS.md) |
-| build-9 | Aucun changement d'appli : la fabrication ignore désormais les commits qui ne modifient que des `.md` |
-| build-10 | Aucun changement d'appli : la fabrication ignore aussi `.claude/` et `.mcp.json` (ajout des automatisations) |
+| build-8 à 10 | Aucun changement d'appli (CLAUDE.md, AGENTS.md, automatisations). Identiques à build-7. |
 
 ## Reste à faire / idées
 
 - **À confirmer par le propriétaire** : le correctif écran de veille (build-7) n'a pas encore été validé sur la TV.
 - La ville de la météo est codée en dur (`Weather.kt`) : la rendre réglable si besoin.
 - Pas de page de réglages propre au lanceur (fond, transparence, ville…) : à envisager si demandé.
+- **Sécurité de la signature (si un jour l'appli est diffusée à d'autres personnes)** : créer une nouvelle clé de
+  signature rangée dans les secrets GitHub (`KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, comme Samoth TV), retirer
+  l'ancienne du dépôt. Conséquence : désinstaller puis réinstaller l'appli une fois sur la TV (favoris à refaire).
+  L'assistant ne peut pas créer ces secrets (accès bloqué) : c'est le propriétaire qui les saisit.
 - Maquettes de design : dans l'artefact « Accueil TV épuré » (planche Claude Design) de la conversation d'origine.
 
 ## Sécurité
 
 Le dépôt est **public** : ne jamais écrire de mot de passe, jeton ou clé dans ce fichier, le README ou les messages de commit.
 
+**Exception connue** : le fichier de signature `app/samoth-home.jks` et son mot de passe (dans `app/build.gradle.kts`)
+sont dans le dépôt depuis le début. Risque faible : la TV ne prend ses mises à jour que sur ce dépôt GitHub.
+Les déplacer dans les secrets GitHub ne servirait à rien seul (ils restent lisibles dans l'historique Git) ;
+seule une **nouvelle clé** règle vraiment le problème (voir Reste à faire). Ne pas recopier ce mot de passe ailleurs.
 
-## Graphify : explorer le code sans gaspiller de tokens
-Avant grep, glob ou la lecture de fichiers entiers, utilise les outils Graphify :
-- où est défini un symbole -> graphify_find, puis graphify_node
-- comment marche une fonctionnalité -> query_graph
-- qui appelle X -> graphify_callers
-- impact d'une modification -> graphify_impact (include_risk=true)
-- tests liés -> graphify_tests_for
-- dépendances d'un fichier -> graphify_file_neighbors
-Compare le commitSha renvoyé avec `git rev-parse HEAD` : identique = fais confiance au résultat, sinon relis seulement les fichiers modifiés.
-Garde grep pour du texte précis, la config et les fichiers non indexés.
-Ne lis que les lignes utiles d'un fichier, jamais un gros fichier en entier.
+
+## Explorer le code
+
+Si les outils Graphify sont disponibles, les préférer à la lecture de fichiers entiers (où est défini un symbole,
+qui l'appelle, impact d'une modification) ; vérifier que leur `commitSha` est égal à `git rev-parse HEAD`.
